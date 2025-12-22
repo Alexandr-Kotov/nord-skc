@@ -73,8 +73,8 @@ class MainWindow(QMainWindow):
             d = ServaTcpDriver(
                 ip=a.ip,
                 port=int(a.extra.get("port", 6565)),
-                hello=str(a.extra.get("hello", "$HELLO\r\n")),
-                field_names=a.extra.get("field_names") or [],
+                timeout_s=float(a.extra.get("timeout_s", 2.0)),
+                field_names=list(a.extra.get("field_names") or []),
             )
         else:
             raise ValueError(f"Unknown asset type: {a.type}")
@@ -92,7 +92,16 @@ class MainWindow(QMainWindow):
             card = self.cards.get(a.id)
             if not card:
                 continue
+
+            # Если окно агрегата уже открыто, не трогаем драйвер (иначе будет конфликт чтения из сокета).
+            if a.id in self.asset_windows:
+                w = self.asset_windows[a.id]
+                if w.isVisible():
+                    continue
+
             d = self._make_driver(a)
+            # Лёгкая проверка: пробуем 1 раз прочитать. Если агрегат не отвечает — offline.
+            # Важно: этот read_once будет потреблять ответ, поэтому мы не делаем это, когда окно открыто.
             rr = d.read_once()
             if rr.ok:
                 card.status_lbl.setText("● online")

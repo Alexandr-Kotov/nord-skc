@@ -390,7 +390,24 @@ class AssetWindow(QWidget):
 
     def _read_values(self) -> ReadResult:
         if not self.test_mode:
-            return self.driver.read_once()
+            try:
+                rr = self.driver.read_once()
+            except Exception as e:
+                rr = ReadResult(ok=False, values={}, error=str(e))
+
+            # Если связи нет/оборвалась — пробуем переподключиться один раз
+            if (not rr.ok) and (rr.error or "").lower().find("not connected") >= 0:
+                try:
+                    self.driver.close()
+                except Exception:
+                    pass
+                try:
+                    self.driver.connect()
+                    rr = self.driver.read_once()
+                except Exception as e:
+                    rr = ReadResult(ok=False, values={}, error=str(e))
+
+            return rr
 
         import math
 

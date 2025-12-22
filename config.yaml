@@ -1,129 +1,105 @@
 app:
-  name: "NORD SKC"
+  name: NORD SKC
   poll_hz: 1
-  history_seconds: 900   # 15 минут в окне графика
-
+  history_seconds: 900
 assets:
-  # 1..13 — флот (заготовка). Заполни plate/ip/type под свои агрегаты.
-  - id: "F-01"
-    fleet_no: 1
-    plate: ""
-    type: "siemens_s7"
-    ip: "172.16.0.101"
-    rack: 0
-    slot: 1
-    tags: {}   # позже заполни карту DB/offset/type
-
-  - id: "F-02"
-    fleet_no: 2
-    plate: ""
-    type: "serva_tcp"
-    ip: "172.16.0.102"
-    port: 6565
-    hello: "$HELLO\r\n"
-    parse: "csv"
-    field_names: []
-
-  - id: "F-03"
-    fleet_no: 3
-    plate: ""
-    type: "siemens_s7"
-    ip: "172.16.0.103"
-    rack: 0
-    slot: 1
-    tags: {}
-
-  - id: "F-04"
-    fleet_no: 4
-    plate: ""
-    type: "serva_tcp"
-    ip: "172.16.0.104"
-    port: 6565
-    hello: "$HELLO\r\n"
-    parse: "csv"
-    field_names: []
-
-  - id: "F-05"
-    fleet_no: 5
-    plate: ""
-    type: "siemens_s7"
-    ip: "172.16.0.105"
-    rack: 0
-    slot: 1
-    tags: {}
-
-  - id: "F-06"
-    fleet_no: 6
-    plate: ""
-    type: "serva_tcp"
-    ip: "172.16.0.106"
-    port: 6565
-    hello: "$HELLO\r\n"
-    parse: "csv"
-    field_names: []
-
-  - id: "F-07"
-    fleet_no: 7
-    plate: ""
-    type: "siemens_s7"
-    ip: "172.16.0.107"
-    rack: 0
-    slot: 1
-    tags: {}
-
-  - id: "F-08"
-    fleet_no: 8
-    plate: ""
-    type: "serva_tcp"
-    ip: "172.16.0.108"
-    port: 6565
-    hello: "$HELLO\r\n"
-    parse: "csv"
-    field_names: []
-
-  - id: "F-09"
-    fleet_no: 9
-    plate: ""
-    type: "siemens_s7"
-    ip: "172.16.0.109"
-    rack: 0
-    slot: 1
-    tags: {}
-
-  - id: "F-10"
-    fleet_no: 10
-    plate: ""
-    type: "serva_tcp"
-    ip: "172.16.0.110"
-    port: 6565
-    hello: "$HELLO\r\n"
-    parse: "csv"
-    field_names: []
-
-  - id: "F-11"
-    fleet_no: 11
-    plate: ""
-    type: "siemens_s7"
-    ip: "172.16.0.111"
-    rack: 0
-    slot: 1
-    tags: {}
-
-  - id: "F-12"
-    fleet_no: 12
-    plate: ""
-    type: "serva_tcp"
-    ip: "172.16.0.112"
-    port: 6565
-    hello: "$HELLO\r\n"
-    parse: "csv"
-    field_names: []
-
-  - id: "F-13"
-    fleet_no: 13
-    plate: ""
-    type: "siemens_s7"
-    ip: "172.16.0.113"
-    rack: 0
-    slot: 1
-    tags: {}
+- id: F-01
+  fleet_no: 1
+  plate: ''
+  type: siemens_s7
+  ip: 172.16.0.101
+  rack: 0
+  slot: 1
+  tags: {}
+- id: F-02
+  fleet_no: 2
+  plate: ''
+  type: serva_tcp
+  ip: 172.16.0.102
+  port: 6565
+  field_names: []
+- id: F-03
+  fleet_no: 3
+  plate: ''
+  type: siemens_s7
+  ip: 172.16.0.103
+  rack: 0
+  slot: 1
+  tags: {}
+- id: F-04
+  fleet_no: 4
+  plate: ''
+  type: serva_tcp
+  ip: 172.16.0.104
+  port: 6565
+  field_names: []
+- id: F-05
+  fleet_no: 5
+  plate: ''
+  type: siemens_s7
+  ip: 172.16.0.105
+  rack: 0
+  slot: 1
+  tags: {}
+- id: F-06
+  fleet_no: 6
+  plate: ''
+  type: serva_tcp
+  ip: 172.16.0.106
+  port: 6565
+  field_names: []
+- id: F-07
+  fleet_no: 7
+  plate: ''
+  type: siemens_s7
+  ip: 172.16.0.107
+  rack: 0
+  slot: 1
+  tags: {}
+  ui:
+    series: {}
+- id: F-08
+  fleet_no: 8
+  plate: ''
+  type: serva_tcp
+  ip: 172.16.0.108
+  port: 6565
+  field_names: []
+- id: F-09
+  fleet_no: 9
+  plate: ''
+  type: siemens_s7
+  ip: 172.16.0.109
+  rack: 0
+  slot: 1
+  tags: {}
+- id: F-10
+  fleet_no: 10
+  plate: ''
+  type: serva_tcp
+  ip: 172.16.0.110
+  port: 6565
+  field_names: []
+- id: F-11
+  fleet_no: 11
+  plate: ''
+  type: siemens_s7
+  ip: 172.16.0.111
+  rack: 0
+  slot: 1
+  tags: {}
+- id: F-12
+  fleet_no: 12
+  plate: ''
+  type: serva_tcp
+  ip: 172.16.0.112
+  port: 6565
+  field_names: []
+- id: F-13
+  fleet_no: 13
+  plate: ''
+  type: siemens_s7
+  ip: 172.16.0.113
+  rack: 0
+  slot: 1
+  tags: {}
