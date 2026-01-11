@@ -7,9 +7,13 @@ from nord_skc.ui.main_window import MainWindow
 def main() -> int:
     cfg = load_config("config.yaml")
     app = QApplication(sys.argv)
+    with open("nord_skc/ui/style.qss", encoding="utf-8") as f:
+        app.setStyleSheet(f.read())
+
     w = MainWindow(cfg)
     w.resize(1400, 800)
     w.show()
+
     return app.exec()
 
 if __name__ == "__main__":

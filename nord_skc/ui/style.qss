@@ -1,0 +1,43 @@
+/* ===== Base ===== */
+QWidget {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    font-size: 12px;
+}
+
+/* ===== Buttons ===== */
+QPushButton {
+    background-color: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+QPushButton:hover {
+    background-color: #333333;
+    border-color: #6aa9ff;
+}
+QPushButton:pressed {
+    background-color: #1a1a1a;
+}
+QPushButton:disabled {
+    color: #777;
+    background-color: #242424;
+    border-color: #2a2a2a;
+}
+
+/* ===== Focus ===== */
+QPushButton:focus,
+QCheckBox:focus,
+QLineEdit:focus {
+    border: 2px solid #6aa9ff;
+}
+
+/* ===== Cards ===== */
+QFrame#ValueCard {
+    border: 1px solid #2f2f2f;
+    border-radius: 10px;
+    background-color: #242424;
+}
+QFrame#ValueCard:hover {
+    border-color: #6aa9ff;
+}

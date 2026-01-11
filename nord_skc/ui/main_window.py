@@ -1,13 +1,42 @@
 from __future__ import annotations
 from typing import Dict
 
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, QScrollArea
+from PySide6.QtCore import Qt, QObject, Signal, QThread
+from PySide6.QtWidgets import QProgressDialog
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QGridLayout,
+    QLabel,
+    QScrollArea,
+    QHBoxLayout,
+    QSizePolicy,
+    QMessageBox,
+)
 
 from nord_skc.config import Config, AssetConfig
 from nord_skc.drivers import SiemensS7Driver, ServaTcpDriver, BaseDriver
 from nord_skc.ui.widgets import AssetCard
 from nord_skc.ui.asset_window import AssetWindow
+
+
+class ConnectWorker(QObject):
+    finished = Signal(object)          # driver
+    failed = Signal(Exception)         # error
+
+    def __init__(self, driver):
+        super().__init__()
+        self._driver = driver
+
+    def run(self):
+        try:
+            self._driver.connect()
+            self.finished.emit(self._driver)
+        except Exception as e:
+            self.failed.emit(e)
+
 
 class MainWindow(QMainWindow):
     def __init__(self, cfg: Config):
@@ -19,16 +48,59 @@ class MainWindow(QMainWindow):
         self.cards: Dict[str, AssetCard] = {}
         self.drivers: Dict[str, BaseDriver] = {}
 
+        self._connect_thread: QThread | None = None
+        self._connect_worker: ConnectWorker | None = None
+        self._connect_dialog: QProgressDialog | None = None
+        self._pending_asset: AssetConfig | None = None
+
         root = QWidget()
         self.setCentralWidget(root)
         v = QVBoxLayout(root)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.setSpacing(0)
+
+        # ===== Header bar (logo + centered title) =====
+        header_bar = QWidget()
+        header_bar.setStyleSheet("background: #1f1f1f;")
+        hb = QHBoxLayout(header_bar)
+        hb.setContentsMargins(16, 10, 16, 10)
+        hb.setSpacing(12)
+
+        # Logo (optional). If file is missing, it will just be empty.
+        logo = QLabel()
+        try:
+            pix = QPixmap("nord_skc/assets/logo.png")
+            if not pix.isNull():
+                logo.setPixmap(pix.scaledToHeight(36, Qt.SmoothTransformation))
+        except Exception:
+            pass
+        logo.setFixedHeight(40)
+        hb.addWidget(logo, 0, Qt.AlignVCenter)
+
+        # Spacer to keep title truly centered
+        left_spacer = QWidget()
+        left_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        hb.addWidget(left_spacer)
 
         header = QLabel("NORD SKC — выбор агрегата")
-        header.setStyleSheet("font-size: 18px; font-weight: 700;")
-        v.addWidget(header)
+        header.setAlignment(Qt.AlignCenter)
+        header.setStyleSheet("font-size: 20px; font-weight: 800;")
+        hb.addWidget(header, 0, Qt.AlignVCenter)
 
+        right_spacer = QWidget()
+        right_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        hb.addWidget(right_spacer)
+
+        v.addWidget(header_bar)
+        sep = QWidget()
+        sep.setFixedHeight(1)
+        sep.setStyleSheet("background: #2f2f2f;")
+        v.addWidget(sep)
+
+        # ===== Scroll with cards =====
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
         v.addWidget(scroll, 1)
 
         grid_host = QWidget()
@@ -41,9 +113,11 @@ class MainWindow(QMainWindow):
         cols = 4
         row = col = 0
         for a in sorted(cfg.assets, key=lambda x: x.fleet_no):
-            title = f"Fleet {a.fleet_no:02d}"
-            subtitle = f"Plate: {a.plate}" if a.plate else "Plate: (empty)"
-            card = AssetCard(title=title, subtitle=subtitle)
+            title = f"Флот {a.fleet_no:02d}"
+            vendor = a.extra.get("vendor", "")
+            plate = a.plate or ""
+
+            card = AssetCard(title=title, plate=plate, vendor=vendor)
             card.clicked.connect(lambda _=None, asset=a: self.open_asset(asset))
             grid.addWidget(card, row, col)
             self.cards[a.id] = card
@@ -53,11 +127,9 @@ class MainWindow(QMainWindow):
                 col = 0
                 row += 1
 
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.refresh_statuses)
-        self.timer.start(1000)  # 1 Hz
-
+    # ---------- Драйверы ----------
     def _make_driver(self, a: AssetConfig) -> BaseDriver:
+        """Создаём драйвер, но НЕ подключаемся. Подключение — только при открытии окна флота."""
         if a.id in self.drivers:
             return self.drivers[a.id]
 
@@ -79,42 +151,112 @@ class MainWindow(QMainWindow):
         else:
             raise ValueError(f"Unknown asset type: {a.type}")
 
-        try:
-            d.connect()
-        except Exception:
-            pass
-
         self.drivers[a.id] = d
         return d
 
-    def refresh_statuses(self):
-        for a in self.cfg.assets:
-            card = self.cards.get(a.id)
-            if not card:
-                continue
-
-            # Если окно агрегата уже открыто, не трогаем драйвер (иначе будет конфликт чтения из сокета).
-            if a.id in self.asset_windows:
-                w = self.asset_windows[a.id]
-                if w.isVisible():
-                    continue
-
-            d = self._make_driver(a)
-            # Лёгкая проверка: пробуем 1 раз прочитать. Если агрегат не отвечает — offline.
-            # Важно: этот read_once будет потреблять ответ, поэтому мы не делаем это, когда окно открыто.
-            rr = d.read_once()
-            if rr.ok:
-                card.status_lbl.setText("● online")
-                card.status_lbl.setStyleSheet("color: #6d6;")
-            else:
-                card.status_lbl.setText("● offline")
-                card.status_lbl.setStyleSheet("color: #d66;")
-
+    # ---------- Открытие окна агрегата ----------
     def open_asset(self, a: AssetConfig):
+        # Защита от двойных кликов, пока идёт подключение
+        if self._connect_dialog is not None:
+            return
+
         d = self._make_driver(a)
+        self._pending_asset = a
+
+        # ===== Loader =====
+        dlg = QProgressDialog("Подключение к агрегату…", "Отмена", 0, 0, self)
+        dlg.setWindowTitle("Подключение")
+        dlg.setWindowModality(Qt.ApplicationModal)
+        dlg.setMinimumDuration(0)
+        dlg.setAutoClose(False)
+        dlg.setAutoReset(False)
+        dlg.canceled.connect(self._cancel_connect)
+        dlg.show()
+
+        self._connect_dialog = dlg
+
+        # ===== Thread + worker =====
+        try:
+            t = QThread(self)
+            w = ConnectWorker(d)
+            w.moveToThread(t)
+
+            t.started.connect(w.run)
+
+            w.finished.connect(self._on_connect_ok)
+            w.failed.connect(self._on_connect_fail)
+
+            # остановить поток после завершения
+            w.finished.connect(t.quit)
+            w.failed.connect(t.quit)
+
+            # корректная уборка
+            t.finished.connect(w.deleteLater)
+            t.finished.connect(t.deleteLater)
+            t.finished.connect(self._on_connect_thread_finished)
+
+            self._connect_thread = t
+            self._connect_worker = w
+
+            t.start()
+
+        except Exception as e:
+            # если что-то пошло не так — обязательно закрываем плоадер
+            if self._connect_dialog:
+                self._connect_dialog.close()
+                self._connect_dialog = None
+            self._pending_asset = None
+            QMessageBox.critical(self, "Ошибка", f"Не удалось запустить подключение.\n\n{e}")
+            return
+
+
+    def _cancel_connect(self):
+        # Важно: реальный socket connect отменить сложно (особенно если блокирующий),
+        # но мы можем корректно закрыть диалог и не открывать окно.
+        if self._connect_dialog:
+            self._connect_dialog.close()
+            self._connect_dialog = None
+        self._pending_asset = None
+        # поток сам завершится, когда connect() вернётся (успех/ошибка)
+
+
+    def _on_connect_ok(self, driver):
+        a = self._pending_asset
+        self._pending_asset = None
+
+        if self._connect_dialog:
+            self._connect_dialog.close()
+            self._connect_dialog = None
+
+        # Если пользователь нажал "Отмена" — просто ничего не открываем
+        if a is None:
+            return
+
         if a.id not in self.asset_windows:
-            w = AssetWindow(self.cfg.app, a, d, config_path="config.yaml")
+            w = AssetWindow(self.cfg.app, a, driver, config_path="config.yaml")
             self.asset_windows[a.id] = w
+
         self.asset_windows[a.id].show()
         self.asset_windows[a.id].raise_()
         self.asset_windows[a.id].activateWindow()
+
+
+    def _on_connect_fail(self, e: Exception):
+        a = self._pending_asset
+        self._pending_asset = None
+
+        if self._connect_dialog:
+            self._connect_dialog.close()
+            self._connect_dialog = None
+
+        # Если пользователь нажал "Отмена" — не показываем ошибку
+        if a is None:
+            return
+
+        from nord_skc.ui.errors import make_connect_error_box
+        make_connect_error_box(self, a, e).exec()
+
+    def _on_connect_thread_finished(self):
+        # поток завершился — ссылки больше невалидны
+        self._connect_thread = None
+        self._connect_worker = None

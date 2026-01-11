@@ -423,7 +423,8 @@ class AssetWindow(QWidget):
     def tick(self):
         rr = self._read_values()
         if not rr.ok:
-            self.status.setText(f"{self.asset.id}: ОШИБКА: {rr.error}")
+            from nord_skc.ui.errors import humanize_runtime_error
+            self.status.setText(humanize_runtime_error(self.asset.id, rr.error or ""))
             return
 
         if not rr.values:

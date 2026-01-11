@@ -10,13 +10,15 @@ assets:
   ip: 172.16.0.101
   rack: 0
   slot: 1
+  vendor: JEREH
   tags: {}
 - id: F-02
   fleet_no: 2
   plate: ''
   type: serva_tcp
-  ip: 172.16.0.102
+  ip: 127.0.0.1
   port: 6565
+  vendor: SERVA
   field_names: []
 - id: F-03
   fleet_no: 3
@@ -25,6 +27,7 @@ assets:
   ip: 172.16.0.103
   rack: 0
   slot: 1
+  vendor: JEREH
   tags: {}
 - id: F-04
   fleet_no: 4
@@ -32,6 +35,7 @@ assets:
   type: serva_tcp
   ip: 172.16.0.104
   port: 6565
+  vendor: SERVA
   field_names: []
 - id: F-05
   fleet_no: 5
@@ -40,6 +44,7 @@ assets:
   ip: 172.16.0.105
   rack: 0
   slot: 1
+  vendor: JEREH
   tags: {}
 - id: F-06
   fleet_no: 6
@@ -47,6 +52,7 @@ assets:
   type: serva_tcp
   ip: 172.16.0.106
   port: 6565
+  vendor: SERVA
   field_names: []
 - id: F-07
   fleet_no: 7
@@ -55,6 +61,7 @@ assets:
   ip: 172.16.0.107
   rack: 0
   slot: 1
+  vendor: JEREH
   tags: {}
   ui:
     series: {}
@@ -64,6 +71,7 @@ assets:
   type: serva_tcp
   ip: 172.16.0.108
   port: 6565
+  vendor: SERVA
   field_names: []
 - id: F-09
   fleet_no: 9
@@ -72,6 +80,7 @@ assets:
   ip: 172.16.0.109
   rack: 0
   slot: 1
+  vendor: JEREH
   tags: {}
 - id: F-10
   fleet_no: 10
@@ -79,6 +88,7 @@ assets:
   type: serva_tcp
   ip: 172.16.0.110
   port: 6565
+  vendor: SERVA
   field_names: []
 - id: F-11
   fleet_no: 11
@@ -87,6 +97,7 @@ assets:
   ip: 172.16.0.111
   rack: 0
   slot: 1
+  vendor: JEREH
   tags: {}
 - id: F-12
   fleet_no: 12
@@ -94,6 +105,7 @@ assets:
   type: serva_tcp
   ip: 172.16.0.112
   port: 6565
+  vendor: SERVA
   field_names: []
 - id: F-13
   fleet_no: 13
@@ -102,4 +114,5 @@ assets:
   ip: 172.16.0.113
   rack: 0
   slot: 1
+  vendor: JEREH
   tags: {}
